@@ -1,6 +1,6 @@
 from langchain_core.prompts import PromptTemplate
-from infrastructure.llm.prompts.architecture_prompt import ARCHITECTURE_PROMPT, PRE_ARCHITECTURE_PROMPT, REVIEWER_ARCHITECTURE_PROMPT
-from domain.schemas.archistecture import PreArchitecture, Architecture, ReviewArchitecture
+from infrastructure.llm.prompts.architecture_prompt import ARCHITECTURE_PROMPT, PRE_ARCHITECTURE_PROMPT, REVIEWER_ARCHITECTURE_PROMPT, SIMPLIFICATION_PROMPT, ENRICHER_PROMPT
+from domain.schemas.archistecture import PreArchitecture, Architecture, ReviewArchitecture, SimplificationReview, EnrichmentReview
 from infrastructure.llm.chain_builder import build_chain
 
 
@@ -20,7 +20,7 @@ def generator_pre_architecture(requirements, model_domain, use_cases, llm) -> Pr
         })
 
 
-def generator_architecture(pre_architecture, llm, user_constraints: str = None) -> Architecture:
+def generator_architecture(pre_architecture, llm, user_constraints: str = None, feedback= None) -> Architecture:
     """
     Convierte la pre-arquitectura en una arquitectura técnica concreta.
 
@@ -29,9 +29,17 @@ def generator_architecture(pre_architecture, llm, user_constraints: str = None) 
     """
     chain = build_chain(llm, prompt=ARCHITECTURE_PROMPT, schema=Architecture)
 
+    feedback_context = ""
+    
+    if isinstance(feedback, SimplificationReview):
+        feedback_context = f"SIMPLIFICACION REQUERIDA:\n{feedback}"
+    elif isinstance(feedback, EnrichmentReview):    
+        feedback_context = f"ENRIQUECIMIENTO REQUERIDO:\n{feedback}"
+
     return chain.ainvoke({
         "pre_architecture": pre_architecture,
-        "user_constraints": user_constraints if user_constraints else "Sin restricciones especificadas"
+        "user_constraints": user_constraints if user_constraints else "Sin restricciones especificadas",
+        "architecture_feedback": feedback_context if feedback else "No hay feedback previo"
         })
 
 
@@ -48,4 +56,30 @@ def review_architecture(pre_architecture, architecture, query, llm) ->ReviewArch
         "user_query": query,
         "pre_architecture": pre_architecture,
         "architecture": architecture
+    })
+
+def simplify_review(llm, reviewer_architecture, architecture_refuse):
+    """
+    Extrae restricciones de simplificación a partir del feedback del reviewer.
+    Se activa cuando la arquitectura fue marcada como sobreingeniería,
+    guiando al agente de arquitectura hacia una propuesta más simple.
+    """
+    chain = build_chain(llm, prompt=SIMPLIFICATION_PROMPT, schema=SimplificationReview)
+    
+    return chain.ainvoke({
+        "review": reviewer_architecture,
+        "architecture": architecture_refuse
+    })
+
+def enricher_review(llm, reviewer_architecture, architecture_refuse):
+    """
+    Extrae restricciones de enriquecimiento a partir del feedback del reviewer.
+    Se activa cuando la arquitectura fue marcada como insuficiente,
+    guiando al agente de arquitectura a incorporar las capacidades faltantes.
+    """
+    chain = build_chain(llm, prompt=ENRICHER_PROMPT, schema=EnrichmentReview)
+    
+    return chain.ainvoke({
+        "review": reviewer_architecture,
+        "architecture": architecture_refuse
     })

@@ -39,7 +39,7 @@ software_architecture_agent/
 │   └── setting.py                # Variables de entorno y constantes
 ├── domain/                       # Capa de dominio (esquemas Pydantic)
 │   └── schemas/
-│       ├── archistecture.py      # Modelos: PreArchitecture, Architecture, Review
+│       ├── archistecture.py      # Modelos: PreArchitecture, Architecture, ReviewArchitecture, SimplificationReview, EnrichmentReview
 │       ├── documentation.py      # Modelo: Documentación final
 │       ├── model_domain.py       # Modelos: Entity, Relationship, ModelDomain
 │       ├── query_evaluator.py    # Modelos: QueryEvaluator, QueryEnricher, Question
@@ -77,7 +77,7 @@ software_architecture_agent/
             ├── requirements_prompt.py       # Prompts de refinimiento y requisitos
             ├── model_domain_prompt.py       # Prompt de modelado de dominio
             ├── use_cases_prompt.py          # Prompt de casos de uso
-            ├── architecture_prompt.py       # Prompts de pre-arquitectura, arquitectura y revisión
+            ├── architecture_prompt.py       # Prompts: pre-arquitectura, arquitectura, revisión, simplificación y enriquecimiento
             └── documentation_prompt.py      # Prompt de generación de documento final
 ```
 
@@ -144,7 +144,7 @@ print(result["documentation"])
 
 - **Enriquecimiento de consulta:** Consolida la consulta original con las respuestas del usuario en una descripción única y coherente, eliminando ambigüedades antes del análisis arquitectónico.
 
-- **Pipeline automatizado multi-etapa:** El sistema ejecuta una secuencia completa: evaluación de consulta, enriquecimiento, refinamiento, generación de requisitos, modelo de dominio DDD, casos de uso UML, pre-arquitectura, diseño arquitectónico, revisión automática y generación de documento final.
+- **Pipeline automatizado multi-etapa:** El sistema ejecuta una secuencia completa: evaluación de consulta, enriquecimiento, refinamiento, generación de requisitos, modelo de dominio DDD, casos de uso UML, pre-arquitectura, diseño arquitectónico, revisión automática con bucle iterativo y generación de documento final.
 
 - **Modelado de dominio DDD:** Identifica entidades, atributos, comportamientos, relaciones con cardinalidad, reglas de negocio y eventos de dominio a partir de la descripción del problema.
 
@@ -154,7 +154,7 @@ print(result["documentation"])
 
 - **Diseño arquitectónico:** Propone patrón arquitectónico, capas con responsabilidades, tecnologías justificadas y decisiones de diseño documentadas.
 
-- **Revisión automática:** Evalúa la arquitectura generada con puntuación del 1 al 10, detecta sobreingeniería y subingeniería, y emite observaciones críticas y recomendaciones.
+- **Revisión automática con bucle iterativo:** Evalúa la arquitectura generada con puntuación del 1 al 10, detecta sobreingeniería y subingeniería, y emite observaciones críticas y recomendaciones. Si la puntuación es menor a 7 o se detecta sobreingeniería, el pipeline itera hasta 3 veces aplicando simplificación o enriquecimiento según el caso, hasta converger en una solución balanceada.
 
 - **Sesgo YAGNI y simplicidad:** Los prompts instruyen explícitamente al modelo a priorizar soluciones simples, evitar complejidad innecesaria y preferir arquitecturas monolíticas modulares sobre microservicios.
 

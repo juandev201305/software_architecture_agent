@@ -48,3 +48,27 @@ class ReviewArchitecture(BaseModel):
     detected_overengineering: bool = Field(description="Indica si la arquitectura incorpora complejidad innecesaria para el problema planteado.")
     detected_underengineering: bool = Field(description="Indica si la solución es insuficiente para el problema")
     alignment_summary: str = Field(description="Conclusión ejecutiva sobre la coherencia y adecuación de la arquitectura respecto al problema de negocio, requisitos y contexto analizado.")
+
+# Área de la arquitectura que debe simplificarse
+class SimplificationConstraint(BaseModel):
+    area: str = Field(description="Área afectada: 'tecnologia', 'capas', 'patrones', 'infraestructura'.")
+    original: str = Field(description="Decisión original que debe simplificarse.")
+    reason: str = Field(description="Por qué debe simplificarse según el reviewer.")
+    
+# Resultado del análisis de simplificación para guiar la re-arquitectura
+class SimplificationReview(BaseModel):
+    simplification_constraints: List[SimplificationConstraint] = Field(description="Restricciones derivadas del feedback del reviewer para guiar la re-arquitectura.")
+    max_complexity_allowed: str = Field(description="Complejidad máxima permitida para la nueva propuesta. Ej: 'app monolítica', 'script con UI simple', 'API mínima con una BD embebida'.")
+    must_keep: List[str] = Field(default_factory=list,description="Decisiones de la arquitectura original que sí deben mantenerse.")
+
+# Restricción de enriquecimiento derivada del feedback del reviewer
+class EnrichmentConstraint(BaseModel):
+    area: str = Field(description="Área afectada: 'tecnologia', 'capas', 'patrones', 'infraestructura'.")
+    missing: str = Field(description="Capacidad o decisión ausente en la arquitectura actual.")
+    reason: str = Field(description="Por qué es necesaria según el reviewer.")
+
+# Resultado del análisis de enriquecimiento para guiar la re-arquitectura
+class EnrichmentReview(BaseModel):
+    enrichment_constraints: List[EnrichmentConstraint] = Field(description="Capacidades o decisiones faltantes que deben incorporarse en la siguiente iteración.")
+    min_complexity_required: str = Field(description="Complejidad mínima necesaria para cubrir las capacidades requeridas. Ej: 'API REST con lógica de negocio explícita', 'servicio de notificaciones asíncrono'.")
+    must_keep: List[str] = Field(default_factory=list, description="Decisiones de la arquitectura original que sí deben mantenerse.")
